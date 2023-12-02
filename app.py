@@ -1,0 +1,99 @@
+from flask import Flask, render_template, url_for, request, redirect
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+# tasks_lesson_18.db
+db = SQLAlchemy(app)
+
+# https://www.youtube.com/playlist?list=PL0lO_mIqDDFXiIQYjLbncE9Lb6sx8elKA
+# ===== При запуске python в терминале =====
+# Как я понял, в новой версии БД сохраняется в папке instance. В командной строке пишем:
+# >>>from app import app, db
+# >>>app.app_context().push()
+# >>>db.create_all()
+
+
+class Note(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Note %r>' % self.id
+
+
+@app.route('/')
+@app.route('/home')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/notes')
+def posts():
+    notes = Note.query.order_by(Note.created_at.desc()).all()
+    return render_template('notes.html', notes=notes)
+
+
+@app.route('/notes/<int:id>')
+def post_detail(id):
+    note = Note.query.get(id)
+    return render_template('note_detail.html', note=note)
+
+
+@app.route('/notes/<int:id>/delete')
+def post_delete(id):
+    note = Note.query.get_or_404(id)
+
+    try:
+        db.session.delete(note)
+        db.session.commit()
+        return redirect('/notes')
+    except:
+        return "При удалении записи произошла ошибка"
+
+
+@app.route('/notes/<int:id>/update', methods=['POST', 'GET'])
+def post_update(id):
+    note = Note.query.get(id)
+    if request.method == 'POST':
+        note.title = request.form['title']
+        note.text = request.form['text']
+
+        try:
+            db.session.commit()
+            return redirect('/notes')
+        except:
+            return "При редактировании заметки произошла ошибка"
+    else:
+
+        return render_template('note_update.html', note=note)
+
+
+@app.route('/create_note', methods=['POST', 'GET'])
+def create_note():
+    if request.method == 'POST':
+        title = request.form['title']
+        text = request.form['text']
+
+        note = Note(title=title, text=text)
+
+        try:
+            db.session.add(note)
+            db.session.commit()
+            return redirect('/notes')
+        except:
+            return "При добавлении заметки произошла ошибка"
+    else:
+        return render_template('create_note.html')
+
+
+if __name__ == "__main__":
+    app.run(debug=True)  # 'debug=True' - для отслеживания ошибок при тестировании
