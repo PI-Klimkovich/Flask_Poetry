@@ -4,26 +4,27 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
-# tasks_lesson_18.db
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tasks_lesson_18.db'
 db = SQLAlchemy(app)
 
 # https://www.youtube.com/playlist?list=PL0lO_mIqDDFXiIQYjLbncE9Lb6sx8elKA
 # ===== При запуске python в терминале =====
-# Как я понял, в новой версии БД сохраняется в папке instance. В командной строке пишем:
+# БД сохраняется в папке instance.
+# В командной строке пишем:
 # >>>from app import app, db
 # >>>app.app_context().push()
 # >>>db.create_all()
+# >>>exit()
 
 
 class Note(db.Model):
-    id = db.Column(db.String(36), primary_key=True,  default=lambda: str(uuid.uuid4()))
+    uuid = db.Column(db.String(36), primary_key=True,  default=lambda: str(uuid.uuid4()))
     title = db.Column(db.String(100), nullable=False)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return '<Note %r>' % self.id
+        return '<Note %r>' % self.uuid
 
 
 @app.route('/')
@@ -43,15 +44,15 @@ def posts():
     return render_template('notes.html', notes=notes)
 
 
-@app.route('/notes/<id>')
-def post_detail(id):
-    note = Note.query.get(id)
+@app.route('/notes/<uuid>')
+def post_detail(uuid):
+    note = Note.query.get(uuid)
     return render_template('note_detail.html', note=note)
 
 
-@app.route('/notes/<id>/delete')
-def post_delete(id):
-    note = Note.query.get_or_404(id)
+@app.route('/notes/<uuid>/delete')
+def post_delete(uuid):
+    note = Note.query.get_or_404(uuid)
 
     try:
         db.session.delete(note)
@@ -61,9 +62,9 @@ def post_delete(id):
         return "При удалении записи произошла ошибка"
 
 
-@app.route('/notes/<id>/update', methods=['POST', 'GET'])
-def post_update(id):
-    note = Note.query.get(id)
+@app.route('/notes/<uuid>/update', methods=['POST', 'GET'])
+def post_update(uuid):
+    note = Note.query.get(uuid)
     if request.method == 'POST':
         note.title = request.form['title']
         note.text = request.form['text']

@@ -15,7 +15,7 @@
         <div class="alert alert-info">
             <h2>{{ el.title }}</h2>
             <p><b>Дата: {{ el.created_at.date() }}</b></p>
-            <a href="/notes/{{ el.id }}" class="btn btn-warning">Ознакомиться</a>
+            <a href="/notes/{{ el.uuid }}" class="btn btn-warning">Ознакомиться</a>
         </div>
         {% endfor %}
     {% else %}
