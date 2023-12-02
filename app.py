@@ -1,3 +1,4 @@
+import uuid
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -16,7 +17,7 @@ db = SQLAlchemy(app)
 
 
 class Note(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(36), primary_key=True,  default=lambda: str(uuid.uuid4()))
     title = db.Column(db.String(100), nullable=False)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -42,13 +43,13 @@ def posts():
     return render_template('notes.html', notes=notes)
 
 
-@app.route('/notes/<int:id>')
+@app.route('/notes/<id>')
 def post_detail(id):
     note = Note.query.get(id)
     return render_template('note_detail.html', note=note)
 
 
-@app.route('/notes/<int:id>/delete')
+@app.route('/notes/<id>/delete')
 def post_delete(id):
     note = Note.query.get_or_404(id)
 
@@ -60,7 +61,7 @@ def post_delete(id):
         return "При удалении записи произошла ошибка"
 
 
-@app.route('/notes/<int:id>/update', methods=['POST', 'GET'])
+@app.route('/notes/<id>/update', methods=['POST', 'GET'])
 def post_update(id):
     note = Note.query.get(id)
     if request.method == 'POST':
