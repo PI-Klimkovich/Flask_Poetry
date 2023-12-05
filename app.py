@@ -44,6 +44,13 @@ def posts():
     return render_template('notes.html', notes=notes)
 
 
+@app.route('/about_note/<uuid>')
+def post_about(uuid):
+    note = Note.query.get(uuid)
+    return render_template('note_about.html', note=note)
+#    return render_template('note_about.html')
+
+
 @app.route('/notes/<uuid>')
 def post_detail(uuid):
     note = Note.query.get(uuid)
@@ -90,7 +97,10 @@ def create_note():
         try:
             db.session.add(note)
             db.session.commit()
-            return redirect('/notes')
+            print(note.uuid)
+#            return redirect('/about')
+#            return redirect('/notes/<uuid>/about')
+            return redirect(url_for('post_about', uuid=note.uuid))
         except:
             return "При добавлении заметки произошла ошибка"
     else:
